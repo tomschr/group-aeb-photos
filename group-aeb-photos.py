@@ -100,8 +100,8 @@ def getexif_exiftool(filename: Path):
         log.fatal(err)
     except json.JSONDecodeError as err:
         log.fatal("Problem converting exiftool -> JSON: %s", err)
+        raise
 
-    log.error("No EXIF data found, using fake")
     #return {"SourceFile": filename.name,
     #         "ExifTool": {
     #             "ExifToolVersion": 10.80,
@@ -128,9 +128,7 @@ def get_all_image_files(directory: str, with_raw=False):
     """
     log.debug("Investigating directory %r, using RAW files=%s", directory, with_raw)
     for q in Path(directory).iterdir():
-        if q.is_file() and q.suffix in IMAGE_TYPES:
-            yield q
-        if with_raw and q.suffix in IMAGE_RAW_TYPES:
+        if (q.is_file() and q.suffix in IMAGE_TYPES) or (with_raw and q.suffix in IMAGE_RAW_TYPES):
             yield q
 
 
@@ -214,7 +212,8 @@ async def aio_consume(queue: asyncio.Queue, result: asyncio.Queue, loop):
         with ProcessPoolExecutor() as pool:
             exif = await loop.run_in_executor(pool, getexif_exiftool, image)
             log.info("%s:", image.name)
-            log.debug("  CreateTime=%s", exif.get('EXIF:CreateTime'))
+            # log.debug(exif)
+            log.debug("  CreateDate=%s", exif.get('EXIF:CreateDate'))
 
             # TODO: Maybe filter the images to those that are contains AEB
             try:
@@ -231,7 +230,7 @@ async def aio_consume(queue: asyncio.Queue, result: asyncio.Queue, loop):
 
                 # Only add images which are shot in AEB mode:
                 if mode == "AEB":
-                    log.info("  is AEB image")
+                    log.info("  AEB image=%s", bool(mode == "AEB"))
                     result.put({image: exif})
             except KeyError:
                 log.warning(" not a AEB image. Skipping.")
@@ -271,6 +270,8 @@ def aio_process(args: argparse.Namespace):
     :param args: the parsed CLI result
     :type args: :class:`argparse.Namespace`
     """
+    if not Path(args.dir).exists():
+        raise NotADirectoryError("Directory %r does not exist" % args.dir)
     loop = asyncio.get_event_loop()
     log.debug("asyncio event loop: %s", type(loop))
     #
@@ -289,8 +290,9 @@ def aio_process(args: argparse.Namespace):
     except KeyboardInterrupt:
         # Received Ctrl+C
         asyncio.gather(*asyncio.Task.all_tasks()).cancel()
-        loop.stop()
+
     finally:
+        loop.stop()
         loop.close()
     return 0
 
@@ -308,6 +310,10 @@ def main(cliargs=None):
         return result
     except ValueError as error:
         log.error(error)
+    except  NotADirectoryError as error:
+        log.fatal(error)
+    except Exception as error:
+        log.fatal(error)
     return 1
 
 
