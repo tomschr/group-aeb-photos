@@ -17,6 +17,11 @@ from pathlib import Path
 import subprocess
 import sys
 
+if sys.version_info < (3, 5):
+    print("ERROR: Script needs Python version 3.5 or greater",
+          file=sys.stderr)
+    sys.exit(100)
+
 
 PROC="aeb"
 
