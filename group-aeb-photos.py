@@ -5,7 +5,7 @@
 
 
 __author__ = "Thomas Schraitle <tom_schr@web.de>"
-__version__ = "0.1.1"
+__version__ = "0.5.0"
 
 import argparse
 import asyncio
