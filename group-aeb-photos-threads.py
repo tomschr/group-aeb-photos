@@ -377,6 +377,10 @@ def output_result(groups: dict, args: argparse.Namespace):
 
         print(json.dumps(groups, indent=4, default=default))
     else:
+        if not groups:
+            log.info("No AEB image found.")
+            return
+
         for date in sorted(groups.keys()):
             print(date)
             for img in groups[date]:
