@@ -288,6 +288,7 @@ def parsecli(cliargs: Optional[list] = None) -> argparse.Namespace:
     dictConfig(DEFAULT_LOGGING_DICT)
 
     parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
                                      epilog=(f"Version {__version__} "
                                              f"written by {__author__} ")
                                      )
