@@ -246,7 +246,7 @@ def getexif_exiftool(filename: PathType) -> dict:
     :param filename: the image filename
     :return: Dictionary with EXIF metadata
     """
-    cmd = f"exiftool -json -G {filename}"
+    cmd = f'exiftool -json -G "{filename}"'
     try:
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
         log.debug("Got EXIF data from %s: %i bytes", filename, len(result.stdout))
